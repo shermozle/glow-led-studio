@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>Glow — LED Animation Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="header">
+      <a class="brand" href="./" aria-label="Glow home"><span class="brand-mark" aria-hidden="true"></span><span>Glow</span></a>
+      <span class="local-badge">Local Bluetooth</span>
+    </header>
+
+    <section class="hero">
+      <p class="eyebrow">iDeal LED animation studio</p>
+      <h1>Make light move.</h1>
+      <p>Compose colors, direct the rhythm, and turn sound into motion—all from your browser.</p>
+    </section>
+
+    <div id="support-message" class="notice" hidden>
+      Web Bluetooth is unavailable here. Use Chrome or Edge over HTTPS or localhost. Animation editing and preview still work.
+    </div>
+
+    <section class="panel connection-panel" aria-labelledby="connection-title">
+      <div class="connection-copy">
+        <span id="status-dot" class="status-dot" aria-hidden="true"></span>
+        <div><h2 id="connection-title">Your lights</h2><p id="connection-status" class="status-text" role="status" aria-live="polite">Not connected</p></div>
+      </div>
+      <button id="connect-button" class="button button-primary" type="button">Connect lights</button>
+      <dl class="device-details">
+        <div><dt>Device</dt><dd id="device-name">—</dd></div>
+        <div><dt>Firmware</dt><dd id="firmware-version">—</dd></div>
+        <div><dt>Last response</dt><dd id="last-response">—</dd></div>
+      </dl>
+    </section>
+
+    <fieldset id="light-controls" class="panel power-panel controls" disabled>
+      <div><p class="section-number">Power</p><h2>Light switch</h2><p>Turn the whole string on or off.</p></div>
+      <div class="power-buttons">
+        <button id="on-button" class="button power-button" type="button"><span aria-hidden="true">●</span> On</button>
+        <button id="off-button" class="button power-button" type="button"><span aria-hidden="true">○</span> Off</button>
+      </div>
+    </fieldset>
+
+    <section class="panel color-panel" aria-labelledby="color-title">
+      <div class="color-heading">
+        <div><p class="section-number">Color lab</p><h2 id="color-title">Find your shade</h2><p>Drag around the wheel; move inward for softer colors.</p></div>
+        <output id="color-value" for="color-hex">#FF5A5F</output>
+      </div>
+      <div class="color-target" role="group" aria-label="Apply color to">
+        <button id="target-solid" class="target-button active" type="button" aria-pressed="true">Solid</button>
+        <button id="target-frame" class="target-button" type="button" aria-pressed="false">Whole frame</button>
+        <button id="target-pixel" class="target-button" type="button" aria-pressed="false">One LED</button>
+      </div>
+      <div class="color-editor">
+        <canvas id="color-wheel" width="260" height="260" tabindex="0" role="slider" aria-label="Color wheel. Arrow keys adjust hue and saturation" aria-valuemin="0" aria-valuemax="100"></canvas>
+        <div class="color-tools">
+          <label class="hex-label" for="color-hex">Hex color</label>
+          <input id="color-hex" class="text-input hex-input" value="#ff5a5f" maxlength="7" spellcheck="false" autocomplete="off">
+          <div class="swatches" aria-label="Preset colors">
+            <button class="swatch" style="--swatch:#ff5a5f" data-color="#ff5a5f" type="button" aria-label="Coral"></button>
+            <button class="swatch" style="--swatch:#ffb347" data-color="#ffb347" type="button" aria-label="Warm orange"></button>
+            <button class="swatch" style="--swatch:#ffe66d" data-color="#ffe66d" type="button" aria-label="Yellow"></button>
+            <button class="swatch" style="--swatch:#4ade80" data-color="#4ade80" type="button" aria-label="Green"></button>
+            <button class="swatch" style="--swatch:#22d3ee" data-color="#22d3ee" type="button" aria-label="Cyan"></button>
+            <button class="swatch" style="--swatch:#818cf8" data-color="#818cf8" type="button" aria-label="Indigo"></button>
+            <button class="swatch" style="--swatch:#ff2e88" data-color="#ff2e88" type="button" aria-label="Hot pink"></button>
+            <button class="swatch" style="--swatch:#e879f9" data-color="#e879f9" type="button" aria-label="Soft pink"></button>
+            <button class="swatch" style="--swatch:#c084fc" data-color="#c084fc" type="button" aria-label="Lavender"></button>
+            <button class="swatch" style="--swatch:#ffffff" data-color="#ffffff" type="button" aria-label="White"></button>
+          </div>
+        </div>
+      </div>
+      <div class="pixel-editor">
+        <div class="section-label"><span>Individual LEDs</span><span id="selected-pixel-label">LED 1 of 33</span></div>
+        <div id="pixel-grid" class="pixel-grid" aria-label="Select an LED"></div>
+        <div class="pixel-actions">
+          <button id="fill-pixels" class="button button-small" type="button">Fill frame</button>
+          <button id="clear-pixels" class="button button-small" type="button">Clear frame</button>
+          <button id="apply-pixels" class="button button-small" type="button">Apply to lights</button>
+        </div>
+      </div>
+      <div class="brightness-control">
+        <div class="brightness-label"><label for="brightness">Brightness</label><output id="brightness-value" for="brightness">100%</output></div>
+        <input id="brightness" type="range" min="1" max="100" value="100">
+        <div class="range-labels" aria-hidden="true"><span>Dim</span><span>Bright</span></div>
+      </div>
+    </section>
+
+    <section class="panel studio-panel" aria-labelledby="studio-title">
+      <div class="studio-heading">
+        <div><p class="section-number">Animation studio</p><h2 id="studio-title">Build a sequence</h2><p>Edit frames, preview instantly, then play them on your lights.</p></div>
+        <button id="new-animation" class="button button-small" type="button">＋ New</button>
+      </div>
+
+      <div class="animation-picker">
+        <label for="animation-select">Animation</label>
+        <select id="animation-select" class="text-input"></select>
+      </div>
+
+      <div id="animation-preview" class="animation-preview">
+        <div class="preview-glow"></div>
+        <div class="preview-copy"><span id="preview-state">Ready</span><strong id="preview-animation-name">Rainbow flow</strong><span id="preview-frame">12 frames · Fade</span></div>
+        <div id="preview-pixels" class="preview-pixels" aria-label="Animation pixel preview"></div>
+        <div id="preview-dots" class="preview-dots" aria-hidden="true"></div>
+      </div>
+
+      <div class="playback-controls">
+        <button id="play-button" class="button button-primary" type="button">▶ Play</button>
+        <button id="next-frame" class="button" type="button">Next frame</button>
+        <span id="playback-note">Preview works without a connection</span>
+      </div>
+
+      <div class="editor-grid">
+        <div class="timeline-section">
+          <div class="section-label"><span>Frames</span><span id="frame-count">7</span></div>
+          <ol id="frame-list" class="frame-list"></ol>
+        </div>
+        <div class="frame-editor">
+          <div class="section-label"><span>Selected frame</span><span id="selected-frame-label">1</span></div>
+          <label for="frame-duration">Duration <span class="input-hint">milliseconds</span></label>
+          <input id="frame-duration" class="text-input" type="number" min="250" max="10000" step="50" value="700">
+          <div class="frame-actions">
+            <button id="add-frame" class="button button-small" type="button">＋ Add</button>
+            <button id="duplicate-frame" class="button button-small" type="button">Duplicate</button>
+            <button id="move-frame" class="button button-small" type="button">Move later</button>
+            <button id="delete-frame" class="button button-small danger-button" type="button">Delete</button>
+          </div>
+          <p class="editor-hint">Choose “Selected animation frame” above to recolor this frame with the wheel.</p>
+        </div>
+      </div>
+
+      <div class="animation-settings">
+        <label class="setting-wide">Name<input id="animation-name" class="text-input" maxlength="48" value="Rainbow flow"></label>
+        <label>Transition<select id="animation-transition" class="text-input"><option value="fade">Fade</option><option value="step">Step</option></select></label>
+        <label>Speed<select id="animation-speed" class="text-input"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+        <label class="check-label"><input id="animation-loop" type="checkbox" checked> Loop animation</label>
+      </div>
+      <div class="save-controls">
+        <button id="save-animation" class="button" type="button">Save animation</button>
+        <button id="delete-animation" class="button danger-button" type="button" disabled>Delete saved copy</button>
+        <span id="save-status" role="status" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <section class="panel sound-panel" aria-labelledby="sound-title">
+      <div class="sound-heading">
+        <div><p class="section-number">Hardware sound reactive</p><h2 id="sound-title">Let the controller listen</h2><p>Use the microphone built into the LED controller. No browser microphone permission or audio processing is used.</p></div>
+      </div>
+      <div class="hardware-sound-settings">
+        <label for="sound-mode">Effect<select id="sound-mode" class="text-input"><option value="0">Effect 1</option><option value="1">Effect 2</option><option value="2">Effect 3</option><option value="3">Effect 4</option><option value="4">Effect 5</option><option value="5">Effect 6</option><option value="6">Effect 7</option><option value="7">Effect 8</option><option value="8">Effect 9</option><option value="9">Effect 10</option></select></label>
+        <label for="sound-sensitivity">Sensitivity <output id="sensitivity-value" for="sound-sensitivity">100</output><input id="sound-sensitivity" type="range" min="10" max="109" value="100"></label>
+      </div>
+      <div class="sound-controls">
+        <button id="sound-button" class="button button-primary" type="button">Enable sound mode</button>
+        <span id="sound-status" role="status" aria-live="polite">Hardware sound mode off</span>
+      </div>
+    </section>
+
+    <p class="privacy-note"><span aria-hidden="true">⌁</span> No cloud, account, tracking, microphone access, or audio upload. Your animations stay in this browser.</p>
+  </main>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
