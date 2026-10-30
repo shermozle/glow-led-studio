@@ -91,6 +91,7 @@ let colorDataCharacteristic;
 let writeQueue = Promise.resolve();
 let colorTimer;
 let pixelTimer;
+let saveTimer;
 let pixelWritePending = false;
 let lastSentPixels;
 let versions = [];
@@ -268,7 +269,7 @@ function applyColor(hex) {
     renderFrameList();
     renderPixelGrid();
     sendCurrentPixels();
-    elements.saveStatus.textContent = "";
+    scheduleSave();
   }
   updateColorUI();
 }
@@ -481,16 +482,48 @@ function renderEditor() {
   updateColorUI();
 }
 
+function persistCurrentAnimation() {
+  clearTimeout(saveTimer);
+  saveTimer = undefined;
+  try {
+    const id = currentAnimation.builtIn ? `custom-${crypto.randomUUID?.() || Date.now()}` : currentAnimation.id;
+    const saved = normalizeAnimation({ ...currentAnimation, id, builtIn: false });
+    const updated = [...animations];
+    const index = updated.findIndex((animation) => animation.id === id);
+    if (index === -1) updated.push(saved);
+    else updated[index] = saved;
+    saveCustomAnimations(localStorage, updated);
+    animations = updated;
+    currentAnimation = cloneAnimation(saved);
+    renderAnimationOptions();
+    elements.deleteAnimation.disabled = false;
+    elements.saveStatus.textContent = "Saved on this device";
+  } catch (error) {
+    elements.saveStatus.textContent = `Could not save: ${error.message}`;
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  elements.saveStatus.textContent = "Saving…";
+  saveTimer = setTimeout(persistCurrentAnimation, 200);
+}
+
+function flushPendingSave() {
+  if (saveTimer !== undefined) persistCurrentAnimation();
+}
+
 function animationEdited() {
   player.pause();
   currentAnimation = normalizeAnimation(currentAnimation);
   syncPlayerToSelection();
   wheel.setColor(targetColor());
   renderEditor();
-  elements.saveStatus.textContent = "";
+  scheduleSave();
 }
 
 function loadAnimation(animation) {
+  flushPendingSave();
   currentAnimation = cloneAnimation(animation);
   selectedFrame = 0;
   selectedPixel = 0;
@@ -588,9 +621,9 @@ elements.newAnimation.addEventListener("click", () => {
       { pixels: solidPixels("#22d3ee"), duration: 700 },
     ],
   });
-  animations.push(animation);
   loadAnimation(animation);
   setTarget("pixel");
+  persistCurrentAnimation();
 });
 elements.play.addEventListener("click", () => {
   disableSound();
@@ -635,7 +668,7 @@ elements.animationName.addEventListener("input", () => {
   currentAnimation.name = elements.animationName.value;
   renderPreviewMeta();
   renderAnimationOptions();
-  elements.saveStatus.textContent = "";
+  scheduleSave();
 });
 elements.animationTransition.addEventListener("change", () => {
   currentAnimation.transition = elements.animationTransition.value;
@@ -649,32 +682,19 @@ elements.animationLoop.addEventListener("change", () => {
   currentAnimation.loop = elements.animationLoop.checked;
   animationEdited();
 });
-elements.save.addEventListener("click", () => {
-  try {
-    const id = currentAnimation.builtIn ? `custom-${crypto.randomUUID?.() || Date.now()}` : currentAnimation.id;
-    const saved = normalizeAnimation({ ...currentAnimation, id, builtIn: false });
-    const index = animations.findIndex((animation) => animation.id === id);
-    if (index === -1) animations.push(saved);
-    else animations[index] = saved;
-    saveCustomAnimations(localStorage, animations);
-    currentAnimation = cloneAnimation(saved);
-    renderAnimationOptions();
-    renderEditor();
-    elements.saveStatus.textContent = "Saved locally";
-  } catch (error) {
-    elements.saveStatus.textContent = error.message;
-  }
-});
+elements.save.addEventListener("click", persistCurrentAnimation);
 elements.deleteAnimation.addEventListener("click", () => {
   if (currentAnimation.builtIn) return;
   stopPlayback();
-  animations = animations.filter((animation) => animation.id !== currentAnimation.id);
+  flushPendingSave();
+  const updated = animations.filter((animation) => animation.id !== currentAnimation.id);
   try {
-    saveCustomAnimations(localStorage, animations);
+    saveCustomAnimations(localStorage, updated);
+    animations = updated;
+    loadAnimation(animations[0]);
   } catch (error) {
-    console.warn(error);
+    elements.saveStatus.textContent = `Could not save: ${error.message}`;
   }
-  loadAnimation(animations[0]);
 });
 elements.soundButton.addEventListener("click", toggleSound);
 elements.soundMode.addEventListener("change", () => {
@@ -686,6 +706,7 @@ elements.sensitivity.addEventListener("input", () => {
   if (soundEnabled) enqueue(microphoneCommand(true, Number(elements.soundMode.value), Number(elements.sensitivity.value))).catch(reportError);
 });
 window.addEventListener("pagehide", () => {
+  flushPendingSave();
   player.pause();
   if (device?.gatt?.connected) device.gatt.disconnect();
 });
