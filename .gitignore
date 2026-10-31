@@ -1,2 +1,5 @@
 artifacts/
 PXL_*.jpg
+.env
+.env.*
+!.env.example

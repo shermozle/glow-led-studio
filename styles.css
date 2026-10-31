@@ -12,9 +12,10 @@ body {
   min-height: 100vh;
   background: radial-gradient(circle at 85% 0%, rgba(129, 140, 248, .15), transparent 32rem), radial-gradient(circle at 0% 45%, rgba(34, 211, 238, .07), transparent 28rem), #080d18;
 }
-button, input, select { font: inherit; }
+button, input, select, textarea { font: inherit; }
 button { -webkit-tap-highlight-color: transparent; }
-button:focus-visible, input:focus-visible, select:focus-visible, canvas:focus-visible, a:focus-visible { outline: 3px solid #67e8f9; outline-offset: 4px; }
+[hidden] { display: none !important; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, canvas:focus-visible, a:focus-visible { outline: 3px solid #67e8f9; outline-offset: 4px; }
 .shell { width: min(100% - 40px, 1000px); margin: 0 auto; padding: 30px 0 40px; }
 .header, .connection-panel, .connection-copy, .power-panel, .color-heading, .brightness-label, .range-labels, .studio-heading, .sound-heading, .playback-controls, .save-controls { display: flex; align-items: center; }
 .header { justify-content: space-between; }
@@ -56,8 +57,15 @@ h2 { margin: 0; font-size: 1.12rem; letter-spacing: -.025em; }
 .power-button { min-width: 92px; }
 .power-button span { margin-right: 6px; color: #4ade80; }
 .power-button:last-child span { color: #94a3b8; }
-.color-panel, .studio-panel, .sound-panel { margin-top: 20px; padding: 26px; }
+.color-panel, .ai-panel, .studio-panel, .sound-panel { margin-top: 20px; padding: 26px; }
 .color-heading, .studio-heading, .sound-heading { justify-content: space-between; gap: 20px; }
+.ai-prompt-label { margin-top: 22px; }
+textarea.text-input { min-height: 96px; line-height: 1.55; resize: vertical; }
+.ai-examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ai-example { padding: 7px 11px; border: 1px solid #33415a; border-radius: 999px; background: #111c2f; color: #aab8cc; font-size: .74rem; cursor: pointer; }
+.ai-example:hover { border-color: #818cf8; color: #edf2fa; }
+.ai-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; }
+#ai-status { flex: 1; min-width: 180px; color: #a5b4fc; font-size: .82rem; line-height: 1.5; }
 #color-value { color: #a9b7cc; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .84rem; }
 .color-target { display: inline-flex; gap: 4px; margin-top: 23px; padding: 4px; border: 1px solid #29364d; border-radius: 11px; background: #0c1424; }
 .target-button { min-height: 34px; padding: 0 13px; border: 0; border-radius: 8px; background: transparent; color: #8e9db4; font-size: .76rem; cursor: pointer; }

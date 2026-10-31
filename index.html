@@ -97,6 +97,24 @@
       </div>
     </section>
 
+    <section class="panel ai-panel" aria-labelledby="ai-title">
+      <p class="section-number">AI animation designer</p>
+      <h2 id="ai-title">Describe the light show</h2>
+      <p>DeepSeek turns your idea into an editable 33-LED animation, complete with a draft name.</p>
+      <label class="hex-label ai-prompt-label" for="ai-prompt">Your animation idea</label>
+      <textarea id="ai-prompt" class="text-input" rows="3" maxlength="500" placeholder="A fast pink comet with a white tail on a black background"></textarea>
+      <div class="ai-examples" aria-label="Example prompts">
+        <button class="ai-example" type="button" data-prompt="A slow ocean-blue wave with cyan highlights">Ocean wave</button>
+        <button class="ai-example" type="button" data-prompt="Warm orange and pink sparkles on a dark background">Warm sparkles</button>
+        <button class="ai-example" type="button" data-prompt="A rainbow scanner bouncing smoothly from end to end">Rainbow scanner</button>
+      </div>
+      <div class="ai-actions">
+        <button id="generate-animation" class="button button-primary" type="button">✦ Generate draft</button>
+        <button id="use-ai-draft" class="button" type="button" hidden>Use this animation</button>
+        <span id="ai-status" role="status" aria-live="polite"></span>
+      </div>
+    </section>
+
     <section class="panel studio-panel" aria-labelledby="studio-title">
       <div class="studio-heading">
         <div><p class="section-number">Animation studio</p><h2 id="studio-title">Build a sequence</h2><p>Edit frames, preview instantly, then play them on your lights.</p></div>
@@ -167,7 +185,7 @@
       </div>
     </section>
 
-    <p class="privacy-note"><span aria-hidden="true">⌁</span> No cloud, account, tracking, microphone access, or audio upload. Your animations stay in this browser.</p>
+    <p class="privacy-note"><span aria-hidden="true">⌁</span> Animations, colors, and Bluetooth control stay on this device. AI prompts are processed by Railway and DeepSeek. No account, tracking, browser microphone access, or audio upload.</p>
   </main>
   <script type="module" src="app.mjs"></script>
 </body>

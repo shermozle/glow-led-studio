@@ -56,6 +56,10 @@ const elements = {
   applyPixels: byId("apply-pixels"),
   animationSelect: byId("animation-select"),
   newAnimation: byId("new-animation"),
+  aiPrompt: byId("ai-prompt"),
+  generateAnimation: byId("generate-animation"),
+  useAiDraft: byId("use-ai-draft"),
+  aiStatus: byId("ai-status"),
   preview: byId("animation-preview"),
   previewState: byId("preview-state"),
   previewName: byId("preview-animation-name"),
@@ -541,8 +545,10 @@ function persistCurrentAnimation() {
     renderAnimationOptions();
     elements.deleteAnimation.disabled = false;
     elements.saveStatus.textContent = "Saved on this device";
+    return true;
   } catch (error) {
     elements.saveStatus.textContent = `Could not save: ${error.message}`;
+    return false;
   }
 }
 
@@ -575,6 +581,7 @@ function loadAnimation(animation) {
   renderAnimationOptions();
   renderEditor();
   setTarget("solid");
+  elements.useAiDraft.hidden = true;
   elements.saveStatus.textContent = "";
 }
 
@@ -582,6 +589,40 @@ function manualPower(on) {
   stopPlayback();
   lastSentPixels = undefined;
   enqueue(powerCommand(on)).catch(reportError);
+}
+
+async function generateDraft() {
+  if (elements.generateAnimation.disabled) return;
+  const prompt = elements.aiPrompt.value.trim();
+  if (prompt.length < 3) {
+    elements.aiStatus.textContent = "Describe the animation first.";
+    elements.aiPrompt.focus();
+    return;
+  }
+  stopPlayback();
+  elements.generateAnimation.disabled = true;
+  elements.generateAnimation.textContent = "Generating…";
+  elements.useAiDraft.hidden = true;
+  elements.aiStatus.textContent = "DeepSeek is designing your animation…";
+  try {
+    const response = await fetch("/api/generate-animation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || "The AI service is unavailable.");
+    if (!result.animation) throw new Error("The AI service returned an invalid response.");
+    const animation = normalizeAnimation({ ...result.animation, builtIn: false });
+    loadAnimation(animation);
+    elements.useAiDraft.hidden = false;
+    elements.aiStatus.textContent = `Created “${animation.name}”. Preview it, edit it, or add it to your animations.`;
+  } catch (error) {
+    elements.aiStatus.textContent = error.message || "Could not generate an animation. Please try again.";
+  } finally {
+    elements.generateAnimation.disabled = false;
+    elements.generateAnimation.textContent = "✦ Generate draft";
+  }
 }
 
 function toggleSound() {
@@ -600,6 +641,24 @@ function toggleSound() {
   });
 }
 
+elements.generateAnimation.addEventListener("click", generateDraft);
+elements.useAiDraft.addEventListener("click", () => {
+  if (persistCurrentAnimation()) {
+    elements.useAiDraft.hidden = true;
+    elements.aiStatus.textContent = "Added to My animations on this device.";
+  } else {
+    elements.aiStatus.textContent = elements.saveStatus.textContent;
+  }
+});
+document.querySelectorAll(".ai-example").forEach((button) => {
+  button.addEventListener("click", () => {
+    elements.aiPrompt.value = button.dataset.prompt;
+    elements.aiPrompt.focus();
+  });
+});
+elements.aiPrompt.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) generateDraft();
+});
 elements.connect.addEventListener("click", connect);
 elements.on.addEventListener("click", () => manualPower(true));
 elements.off.addEventListener("click", () => manualPower(false));
