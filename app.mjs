@@ -14,7 +14,7 @@ import {
   decryptNotification,
   responseText,
 } from "./protocol.mjs";
-import { normalizeHex } from "./color.mjs";
+import { normalizeHex, loadCustomColors, saveCustomColors } from "./color.mjs";
 import { ColorWheel } from "./color-wheel.mjs";
 import {
   BUILT_IN_ANIMATIONS,
@@ -46,6 +46,9 @@ const elements = {
   targetFrame: byId("target-frame"),
   targetPixel: byId("target-pixel"),
   swatches: Array.from(document.querySelectorAll(".swatch")),
+  customSwatches: byId("custom-swatches"),
+  saveColor: byId("save-color"),
+  colorSaveStatus: byId("color-save-status"),
   pixelGrid: byId("pixel-grid"),
   selectedPixelLabel: byId("selected-pixel-label"),
   fillPixels: byId("fill-pixels"),
@@ -101,11 +104,13 @@ let selectedFrame = 0;
 let selectedPixel = 0;
 let playbackFrame = 0;
 let soundEnabled = false;
+let customColors = [];
 let animations = BUILT_IN_ANIMATIONS.map(cloneAnimation);
 try {
   animations.push(...loadCustomAnimations(localStorage));
+  customColors = loadCustomColors(localStorage);
 } catch (error) {
-  console.warn("Saved animations are unavailable", error);
+  console.warn("Saved browser data is unavailable", error);
 }
 let currentAnimation = cloneAnimation(animations[0]);
 
@@ -206,6 +211,44 @@ function updateColorUI() {
     swatch.classList.toggle("selected", selected);
     swatch.setAttribute("aria-pressed", String(selected));
   });
+}
+
+function selectSwatch(color) {
+  wheel.setColor(color);
+  applyColor(color);
+}
+
+function renderCustomSwatches() {
+  elements.customSwatches.replaceChildren();
+  customColors.forEach((color) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "swatch";
+    button.style.setProperty("--swatch", color);
+    button.dataset.color = color;
+    button.setAttribute("aria-label", `Custom color ${color}`);
+    button.addEventListener("click", () => selectSwatch(color));
+    elements.customSwatches.append(button);
+  });
+  elements.swatches = Array.from(document.querySelectorAll(".swatch"));
+  updateColorUI();
+}
+
+function saveCurrentColor() {
+  const color = targetColor();
+  if (elements.swatches.some((swatch) => swatch.dataset.color === color)) {
+    elements.colorSaveStatus.textContent = "Already in your swatches";
+    return;
+  }
+  const updated = [...customColors, color];
+  try {
+    saveCustomColors(localStorage, updated);
+    customColors = updated;
+    renderCustomSwatches();
+    elements.colorSaveStatus.textContent = `Saved ${color.toUpperCase()} on this device`;
+  } catch (error) {
+    elements.colorSaveStatus.textContent = `Could not save: ${error.message}`;
+  }
 }
 
 function setTarget(target) {
@@ -575,11 +618,9 @@ elements.colorHex.addEventListener("keydown", (event) => {
   if (event.key === "Enter") elements.colorHex.blur();
 });
 elements.swatches.forEach((swatch) => {
-  swatch.addEventListener("click", () => {
-    wheel.setColor(swatch.dataset.color);
-    applyColor(swatch.dataset.color);
-  });
+  swatch.addEventListener("click", () => selectSwatch(swatch.dataset.color));
 });
+elements.saveColor.addEventListener("click", saveCurrentColor);
 elements.brightness.addEventListener("input", () => {
   elements.brightnessValue.value = `${elements.brightness.value}%`;
   if (player.playing) return;
@@ -718,6 +759,7 @@ for (let index = 0; index < PIXEL_COUNT; index += 1) {
 }
 player.load(currentAnimation);
 renderAnimationOptions();
+renderCustomSwatches();
 renderEditor();
 setTarget("solid");
 setConnected(false);

@@ -7,6 +7,22 @@ export function normalizeHex(hex) {
   return hex.toLowerCase();
 }
 
+export const COLOR_STORAGE_KEY = "glow-custom-colors-v1";
+
+export function loadCustomColors(storage) {
+  try {
+    const saved = JSON.parse(storage.getItem(COLOR_STORAGE_KEY) || "[]");
+    if (!Array.isArray(saved)) return [];
+    return [...new Set(saved.map(normalizeHex))];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomColors(storage, colors) {
+  storage.setItem(COLOR_STORAGE_KEY, JSON.stringify([...new Set(colors.map(normalizeHex))]));
+}
+
 export function hexToRgb(hex) {
   const normalized = normalizeHex(hex);
   return [1, 3, 5].map((offset) => parseInt(normalized.slice(offset, offset + 2), 16));

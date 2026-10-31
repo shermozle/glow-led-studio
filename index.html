@@ -71,7 +71,14 @@
             <button class="swatch" style="--swatch:#e879f9" data-color="#e879f9" type="button" aria-label="Soft pink"></button>
             <button class="swatch" style="--swatch:#c084fc" data-color="#c084fc" type="button" aria-label="Lavender"></button>
             <button class="swatch" style="--swatch:#ffffff" data-color="#ffffff" type="button" aria-label="White"></button>
+            <button class="swatch" style="--swatch:#000000" data-color="#000000" type="button" aria-label="Black, LED off"></button>
           </div>
+          <div class="custom-color-actions">
+            <span class="custom-color-label">Custom colors</span>
+            <button id="save-color" class="button button-small" type="button">＋ Save current color</button>
+          </div>
+          <div id="custom-swatches" class="swatches custom-swatches" aria-label="Custom colors"></div>
+          <p id="color-save-status" class="color-save-status" role="status" aria-live="polite"></p>
         </div>
       </div>
       <div class="pixel-editor">
